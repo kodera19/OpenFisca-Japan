@@ -9,6 +9,7 @@ See https://openfisca.org/doc/key-concepts/variables.html
 from functools import cache
 
 import numpy as np
+from openfisca_core.holders import set_input_divide_by_period
 from openfisca_core.periods import DAY, period
 from openfisca_core.variables import Variable
 from openfisca_japan import COUNTRY_DIR
@@ -482,3 +483,23 @@ class 調整控除(Variable):
 
         # 負の数にならないよう、0円未満になった場合は0円に補正
         return np.clip(控除額, 0.0, None)
+
+
+class 都道府県民税所得割額(Variable):
+    value_type = float
+    default_value = 0.0
+    entity = 世帯
+    definition_period = DAY
+    label = "都道府県民税所得割額"
+    reference = "https://www.soumu.go.jp/main_sosiki/c-zaisei/"
+    set_input = set_input_divide_by_period
+
+
+class 市町村民税所得割額(Variable):
+    value_type = float
+    default_value = 0.0
+    entity = 世帯
+    definition_period = DAY
+    label = "市町村民税所得割額"
+    reference = "https://www.soumu.go.jp/main_sosiki/c-zaisei/"
+    set_input = set_input_divide_by_period

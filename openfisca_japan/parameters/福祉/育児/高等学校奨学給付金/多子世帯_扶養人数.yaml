@@ -1,0 +1,7 @@
+description: 高等学校奨学給付金（授業料以外）で多子世帯と判定する扶養人数
+metadata:
+  reference: https://www.mext.go.jp/a_menu/shotou/mushouka/1344089.htm
+  unit: count
+values:
+  2000-04-01:
+    value: 3
