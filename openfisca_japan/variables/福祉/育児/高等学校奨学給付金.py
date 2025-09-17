@@ -69,9 +69,10 @@ class 高等学校奨学給付金_最小(Variable):
     entity = 世帯
     definition_period = DAY
     label = "高等学校奨学給付金"
-    reference = "https://www.mext.go.jp/a_menu/shotou/mushouka/1344089.htm"
+    reference = "https://www.mext.go.jp/a_menu/shotou/mushouka/index.htm"
     documentation = """
     高等学校奨学給付金_最小
+    (文部科学省)https://www.mext.go.jp/a_menu/shotou/mushouka/index.htm
     (東京都HP)https://www.kyoiku.metro.tokyo.lg.jp/admission/tuition/tuition/scholarship_public_school.html
     (兵庫HP)https://web.pref.hyogo.lg.jp/kk35/shougakukyuuhukinn.html
     """
@@ -106,9 +107,10 @@ class 高等学校奨学給付金_最大(Variable):
     entity = 世帯
     definition_period = DAY
     label = "高等学校奨学給付金"
-    reference = "https://www.mext.go.jp/a_menu/shotou/mushouka/1344089.htm"
+    reference = "https://www.mext.go.jp/a_menu/shotou/mushouka/index.htm"
     documentation = """
     高等学校奨学給付金_最大
+    (文部科学省)https://www.mext.go.jp/a_menu/shotou/mushouka/index.htm
     (東京都HP)https://www.kyoiku.metro.tokyo.lg.jp/admission/tuition/tuition/scholarship_public_school.html
     (兵庫HP)https://web.pref.hyogo.lg.jp/kk35/shougakukyuuhukinn.html
     """
@@ -143,9 +145,10 @@ class 生活保護受給世帯の高等学校奨学給付金(Variable):
     entity = 人物
     definition_period = DAY
     label = "生活保護受給世帯の高等学校奨学給付金"
-    reference = "https://www.mext.go.jp/a_menu/shotou/mushouka/1344089.htm"
+    reference = "https://www.mext.go.jp/a_menu/shotou/mushouka/index.htm"
     documentation = """
     生活保護受給世帯の世帯員の高等学校奨学給付金
+    (文部科学省)https://www.mext.go.jp/a_menu/shotou/mushouka/index.htm
     (東京都HP)https://www.kyoiku.metro.tokyo.lg.jp/admission/tuition/tuition/scholarship_public_school.html
     (兵庫HP)https://web.pref.hyogo.lg.jp/kk35/shougakukyuuhukinn.html
     """
@@ -184,9 +187,10 @@ class 住民税非課税世帯の高等学校奨学給付金(Variable):
     entity = 人物
     definition_period = DAY
     label = "住民税非課税世帯の高等学校奨学給付金"
-    reference = "https://www.mext.go.jp/a_menu/shotou/mushouka/1344089.htm"
+    reference = "https://www.mext.go.jp/a_menu/shotou/mushouka/index.htm"
     documentation = """
     住民税非課税世帯の世帯員の高等学校奨学給付金
+    (文部科学省)https://www.mext.go.jp/a_menu/shotou/mushouka/index.htm
     (東京都HP)https://www.kyoiku.metro.tokyo.lg.jp/admission/tuition/tuition/scholarship_public_school.html
     (兵庫HP)https://web.pref.hyogo.lg.jp/kk35/shougakukyuuhukinn.html
     (東京都私立財団HP)https://www.shigaku-tokyo.or.jp/pa_shougaku.html
@@ -210,14 +214,7 @@ class 住民税非課税世帯の高等学校奨学給付金(Variable):
 
         高校運営種別 = 対象人物("高校運営種別", 対象期間).decode()
 
-        通信制課程の高校に通う世帯員がいる = 対象人物.世帯("通信制課程の高校に通う世帯員がいる", 対象期間)
-        # NOTE: 支給対象の範囲内の第一子か否かで区分が変わる(インデックスは0始まりのため、0は第一子を意味する)
-        支給対象の範囲内の第一子である = 子供の年齢降順インデックス == 0
-        第一子扱いとなる高校履修種別である = (高校履修種別 == 高校履修種別パターン.全日制課程) + (高校履修種別 == 高校履修種別パターン.定時制課程)
-        支給対象世帯区分 = np.select(
-            [支給対象の範囲内の第一子である * np.logical_not(通信制課程の高校に通う世帯員がいる) * 第一子扱いとなる高校履修種別である],
-            [1],
-            2).astype(int)
+        支給対象世帯区分 = np.full_like(子供の年齢降順インデックス, 2, dtype=int)
 
         年間給付金額 = np.select(
             [高校運営種別 == 高校運営種別パターン.国立,
@@ -236,7 +233,7 @@ class 専攻科_授業料以外_奨学給付金(Variable):
     entity = 人物
     definition_period = DAY
     label = "専攻科の授業料以外に対する高等学校奨学給付金"
-    reference = "https://www.mext.go.jp/a_menu/shotou/mushouka/1344089.htm"
+    reference = "https://www.mext.go.jp/a_menu/shotou/mushouka/index.htm"
 
     def formula(対象人物, 対象期間, parameters):
         子供である = 対象人物.has_role(世帯.子)
@@ -251,14 +248,10 @@ class 専攻科_授業料以外_奨学給付金(Variable):
         市町村民税所得割額 = 対象人物.世帯("市町村民税所得割額", 対象期間)
         所得割額合計 = 都道府県民税所得割額 + 市町村民税所得割額
 
-        扶養人数 = 対象人物.世帯("扶養人数", 対象期間)
+        扶養子女数 = 対象人物.世帯.nb_persons(世帯.子)
 
-        低所得世帯限度額 = parameters(対象期間).福祉.育児.高等学校奨学給付金.所得割額_低所得世帯.value
-        多子世帯限度額 = parameters(対象期間).福祉.育児.高等学校奨学給付金.所得割額_多子世帯.value
-        多子世帯扶養人数 = parameters(対象期間).福祉.育児.高等学校奨学給付金.多子世帯_扶養人数.value
-
-        低所得世帯である = 所得割額合計 <= 低所得世帯限度額
-        多子世帯である = (所得割額合計 <= 多子世帯限度額) * (扶養人数 >= 多子世帯扶養人数)
+        低所得世帯である = 所得割額合計 < 105500
+        多子世帯である = np.logical_and(所得割額合計 < 264500, 扶養子女数 >= 3)
         専攻科対象世帯である = np.logical_or(低所得世帯である, 多子世帯である)
 
         支給対象 = 子供である * 高校生である * 専攻科である * np.logical_not(住民税非課税世帯である) * 専攻科対象世帯である
@@ -323,11 +316,11 @@ class 高校運営種別(Variable):
 
 
 class 支給対象世帯(Enum):
-    __order__ = "生活保護世帯 非課税世帯1 非課税世帯2 専攻科低所得多子"
+    __order__ = "生活保護世帯 非課税世帯1 非課税世帯2 専攻科低所得世帯"
     生活保護世帯 = "生活保護（生業扶助）受給世帯"
     非課税世帯1 = "非課税世帯（第1子）"
     非課税世帯2 = "非課税世帯（第2子）"
-    専攻科低所得多子 = "専攻科低所得多子"
+    専攻科低所得世帯 = "専攻科低所得世帯"
 
 
 class 高校生である(Variable):
